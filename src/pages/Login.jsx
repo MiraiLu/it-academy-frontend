@@ -11,6 +11,23 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Якщо вже авторизований — редирект за роллю
+useEffect(() => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && ['admin', 'instructor'].includes(user.role)) {
+        navigate('/dashboard');
+      } else {
+        navigate('/cabinet');
+      }
+    } catch {
+      // токен є але user зламаний — лишаємось на логіні
+    }
+  }
+}, []);
+
   useEffect(() => {
     // Eye tracking effect
     const handleMouseMove = (e) => {

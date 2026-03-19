@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, coursesAPI } from '../services/api';
+import { authAPI, coursesAPI, adminAPI } from '../services/api';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -40,13 +40,15 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const coursesResponse = await coursesAPI.getAll();
-      if (coursesResponse.data.success) {
-        setStats(prev => ({
-          ...prev,
-          courses: coursesResponse.data.data.total || 5
-        }));
-      }
+      const [coursesRes, usersRes] = await Promise.allSettled([
+        coursesAPI.getAll(),
+        adminAPI.getUsers({ per_page: 1 }),
+      ]);
+      const coursesTotal = coursesRes.status === 'fulfilled'
+        ? (coursesRes.value.data.data?.total || 0) : 0;
+      const usersTotal = usersRes.status === 'fulfilled'
+        ? (usersRes.value.data.data?.total || usersRes.value.data.data?.length || 0) : 0;
+      setStats({ courses: coursesTotal, users: usersTotal, reviews: 0, revenue: 0 });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -231,9 +233,9 @@ function Dashboard() {
           <div className="stats-grid">
             <div className="stat-card fade-in">
               <div className="stat-icon users">👥</div>
-              <div className="stat-value">1,234</div>
+              <div className="stat-value">{stats.users || '—'}</div>
               <div className="stat-label">Користувачів</div>
-              <div className="stat-change positive">↑ 12% цього місяця</div>
+              <div className="stat-change positive">реальні дані</div>
             </div>
 
             <div className="stat-card fade-in">
@@ -245,16 +247,16 @@ function Dashboard() {
 
             <div className="stat-card fade-in">
               <div className="stat-icon reviews">⭐</div>
-              <div className="stat-value">892</div>
+              <div className="stat-value">—</div>
               <div className="stat-label">Відгуків</div>
-              <div className="stat-change positive">↑ 15% цього місяця</div>
+              <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
             </div>
 
             <div className="stat-card fade-in">
               <div className="stat-icon revenue">💰</div>
-              <div className="stat-value">₴145,678</div>
+              <div className="stat-value">—</div>
               <div className="stat-label">Дохід</div>
-              <div className="stat-change positive">↑ 23% цього місяця</div>
+              <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
             </div>
           </div>
 
