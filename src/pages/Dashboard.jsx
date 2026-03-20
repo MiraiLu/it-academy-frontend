@@ -14,11 +14,14 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserData();
     fetchStats();
+    fetchUsers();
   }, []);
 
   const fetchUserData = async () => {
@@ -52,6 +55,20 @@ function Dashboard() {
       setStats({ courses: coursesTotal, users: usersTotal, reviews: 0, revenue: 0 });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const res = await adminAPI.getUsers({ per_page: 10 });
+      if (res.data.success) {
+        setUsers(res.data.data.data || res.data.data || []);
+      }
+    } catch (err) {
+      console.error('fetchUsers error:', err);
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -214,28 +231,24 @@ function Dashboard() {
             <h3 className="sidebar-title">Головне</h3>
             <ul className="sidebar-menu">
               <li>
-                <a href="/dashboard" className="active">
-                  <span className="sidebar-icon">📊</span>
-                  Dashboard
-                </a>
+                <span className="active" style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px',cursor:'pointer'}}>
+                  <span className="sidebar-icon">📊</span> Dashboard
+                </span>
               </li>
-              <li>
-                <a href="/courses">
-                  <span className="sidebar-icon">📚</span>
-                  Курси
-                </a>
+              <li onClick={() => navigate('/courses')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">📚</span> Курси
+                </span>
               </li>
-              <li>
-                <a href="/users">
-                  <span className="sidebar-icon">👥</span>
-                  Користувачі
-                </a>
+              <li onClick={() => navigate('/users')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">👥</span> Користувачі
+                </span>
               </li>
-              <li>
-                <a href="/enrollments">
-                  <span className="sidebar-icon">📝</span>
-                  Записи на курси
-                </a>
+              <li onClick={() => navigate('/enrollments')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">📝</span> Записи на курси
+                </span>
               </li>
             </ul>
           </div>
@@ -243,29 +256,25 @@ function Dashboard() {
           <div className="sidebar-section">
             <h3 className="sidebar-title">Контент</h3>
             <ul className="sidebar-menu">
-              <li>
-                <a href="/lessons">
-                  <span className="sidebar-icon">📖</span>
-                  Уроки
-                </a>
+              <li onClick={() => navigate('/lessons')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">📖</span> Уроки
+                </span>
               </li>
-              <li>
-                <a href="/quizzes">
-                  <span className="sidebar-icon">❓</span>
-                  Тести
-                </a>
+              <li onClick={() => navigate('/quizzes')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">❓</span> Тести
+                </span>
               </li>
-              <li>
-                <a href="/assignments">
-                  <span className="sidebar-icon">📄</span>
-                  Завдання
-                </a>
+              <li onClick={() => navigate('/assignments')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">📄</span> Завдання
+                </span>
               </li>
-              <li>
-                <a href="/certificates">
-                  <span className="sidebar-icon">🎓</span>
-                  Сертифікати
-                </a>
+              <li onClick={() => navigate('/certificates')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">🎓</span> Сертифікати
+                </span>
               </li>
             </ul>
           </div>
@@ -273,23 +282,20 @@ function Dashboard() {
           <div className="sidebar-section">
             <h3 className="sidebar-title">Налаштування</h3>
             <ul className="sidebar-menu">
-              <li>
-                <a href="/categories">
-                  <span className="sidebar-icon">🏷️</span>
-                  Категорії
-                </a>
+              <li onClick={() => navigate('/categories')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">🏷️</span> Категорії
+                </span>
               </li>
-              <li>
-                <a href="/analytics">
-                  <span className="sidebar-icon">📈</span>
-                  Аналітика
-                </a>
+              <li onClick={() => navigate('/analytics')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">📈</span> Аналітика
+                </span>
               </li>
-              <li>
-                <a href="/settings">
-                  <span className="sidebar-icon">⚙️</span>
-                  Налаштування
-                </a>
+              <li onClick={() => navigate('/settings')} style={{cursor:'pointer'}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px'}}>
+                  <span className="sidebar-icon">⚙️</span> Налаштування
+                </span>
               </li>
             </ul>
           </div>
@@ -297,198 +303,114 @@ function Dashboard() {
 
         {/* Main Content */}
         <main className="main-content">
-          {/* Page Header */}
-          <div className="page-header">
-            <h1 className="page-title">Панель адміністратора</h1>
-            <div className="page-actions">
-              <button className="btn btn-secondary">
-                📊 Звіти
-              </button>
-              <button className="btn btn-primary">
-                ➕ Створити курс
-              </button>
+
+        {/* Page Header */}
+        <div className="page-header" style={{ marginBottom: 24 }}>
+          <h1 className="page-title">Панель адміністратора</h1>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
+          <button className="btn btn-secondary" style={{ padding: '16px', flexDirection: 'column', fontSize: '14px', gap: 8 }}>
+            <span style={{ fontSize: '28px' }}>👤</span> Додати користувача
+          </button>
+          <button className="btn btn-secondary" style={{ padding: '16px', flexDirection: 'column', fontSize: '14px', gap: 8 }}>
+            <span style={{ fontSize: '28px' }}>📊</span> Переглянути звіти
+          </button>
+          <button className="btn btn-secondary" style={{ padding: '16px', flexDirection: 'column', fontSize: '14px', gap: 8 }}>
+            <span style={{ fontSize: '28px' }}>📧</span> Розсилка
+          </button>
+          <button className="btn btn-secondary" style={{ padding: '16px', flexDirection: 'column', fontSize: '14px', gap: 8 }}>
+            <span style={{ fontSize: '28px' }}>🎓</span> Сертифікати
+          </button>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="stats-grid" style={{ marginBottom: 28 }}>
+          <div className="stat-card fade-in">
+            <div className="stat-icon users">👥</div>
+            <div className="stat-value">{stats.users || '—'}</div>
+            <div className="stat-label">Користувачів</div>
+            <div className="stat-change positive">реальні дані</div>
+          </div>
+          <div className="stat-card fade-in">
+            <div className="stat-icon courses">📚</div>
+            <div className="stat-value">{stats.courses}</div>
+            <div className="stat-label">Активних курсів</div>
+            <div className="stat-change positive">реальні дані</div>
+          </div>
+          <div className="stat-card fade-in">
+            <div className="stat-icon reviews">⭐</div>
+            <div className="stat-value">—</div>
+            <div className="stat-label">Відгуків</div>
+            <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
+          </div>
+          <div className="stat-card fade-in">
+            <div className="stat-icon revenue">💰</div>
+            <div className="stat-value">—</div>
+            <div className="stat-label">Дохід</div>
+            <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
+          </div>
+        </div>
+
+        {/* Recent Users Table */}
+        <div className="data-table fade-in">
+          <div className="table-header">
+            <h2 className="table-title">Останні користувачі</h2>
+            <div className="table-filters">
+              <input type="text" className="filter-input" placeholder="Пошук..."/>
+              <select className="filter-select">
+                <option>Всі ролі</option>
+                <option>Студенти</option>
+                <option>Інструктори</option>
+                <option>Адміни</option>
+              </select>
             </div>
           </div>
-
-          {/* Stats Grid */}
-          <div className="stats-grid">
-            <div className="stat-card fade-in">
-              <div className="stat-icon users">👥</div>
-              <div className="stat-value">{stats.users || '—'}</div>
-              <div className="stat-label">Користувачів</div>
-              <div className="stat-change positive">реальні дані</div>
-            </div>
-
-            <div className="stat-card fade-in">
-              <div className="stat-icon courses">📚</div>
-              <div className="stat-value">{stats.courses}</div>
-              <div className="stat-label">Активних курсів</div>
-              <div className="stat-change positive">↑ 8% цього місяця</div>
-            </div>
-
-            <div className="stat-card fade-in">
-              <div className="stat-icon reviews">⭐</div>
-              <div className="stat-value">—</div>
-              <div className="stat-label">Відгуків</div>
-              <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
-            </div>
-
-            <div className="stat-card fade-in">
-              <div className="stat-icon revenue">💰</div>
-              <div className="stat-value">—</div>
-              <div className="stat-label">Дохід</div>
-              <div className="stat-change" style={{color:'#94a3b8'}}>буде в наступній версії</div>
-            </div>
-          </div>
-
-          {/* Recent Users Table */}
-          <div className="data-table fade-in">
-            <div className="table-header">
-              <h2 className="table-title">Останні користувачі</h2>
-              <div className="table-filters">
-                <input 
-                  type="text" 
-                  className="filter-input" 
-                  placeholder="Пошук..."
-                />
-                <select className="filter-select">
-                  <option>Всі ролі</option>
-                  <option>Студенти</option>
-                  <option>Інструктори</option>
-                  <option>Адміни</option>
-                </select>
-              </div>
-            </div>
-
-            <table>
-              <thead>
-                <tr>
-                  <th>ІМ'Я</th>
-                  <th>EMAIL</th>
-                  <th>РОЛЬ</th>
-                  <th>СТАТУС</th>
-                  <th>ДАТА РЕЄСТРАЦІЇ</th>
-                  <th>ДІЇ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '12px' }}>
-                        ІП
+          <table>
+            <thead>
+              <tr>
+                <th>ІМ'Я</th>
+                <th>EMAIL</th>
+                <th>РОЛЬ</th>
+                <th>СТАТУС</th>
+                <th>ДАТА РЕЄСТРАЦІЇ</th>
+                <th>ДІЇ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usersLoading ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>Завантаження...</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>Користувачів не знайдено</td></tr>
+              ) : (
+                users.map(u => (
+                  <tr key={u.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div className="user-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
+                          {u.first_name?.[0]}{u.last_name?.[0]}
+                        </div>
+                        {u.full_name || `${u.first_name} ${u.last_name}`}
                       </div>
-                      Іван Петров
-                    </div>
-                  </td>
-                  <td>ivan@test.com</td>
-                  <td>Студент</td>
-                  <td>
-                    <span className="status-badge status-active">Активний</span>
-                  </td>
-                  <td>15.10.2025</td>
-                  <td>
-                    <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                      Переглянути
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '12px' }}>
-                        ОС
-                      </div>
-                      Олена Сидоренко
-                    </div>
-                  </td>
-                  <td>olena@test.com</td>
-                  <td>Студент</td>
-                  <td>
-                    <span className="status-badge status-active">Активний</span>
-                  </td>
-                  <td>18.10.2025</td>
-                  <td>
-                    <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                      Переглянути
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '12px' }}>
-                        АМ
-                      </div>
-                      Андрій Мельник
-                    </div>
-                  </td>
-                  <td>andrii@test.com</td>
-                  <td>Інструктор</td>
-                  <td>
-                    <span className="status-badge status-active">Активний</span>
-                  </td>
-                  <td>20.10.2025</td>
-                  <td>
-                    <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                      Переглянути
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    </td>
+                    <td>{u.email}</td>
+                    <td>{u.role === 'admin' ? 'Адмін' : u.role === 'instructor' ? 'Інструктор' : 'Студент'}</td>
+                    <td>
+                      <span className={`status-badge ${u.status === 'active' ? 'status-active' : 'status-inactive'}`}>
+                        {u.status === 'active' ? 'Активний' : 'Неактивний'}
+                      </span>
+                    </td>
+                    <td>{u.registration_date ? new Date(u.registration_date).toLocaleDateString('uk-UA') : new Date(u.created_at).toLocaleDateString('uk-UA')}</td>
+                    <td><button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 12 }}>Переглянути</button></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Quick Actions */}
-          <div className="data-table fade-in" style={{ marginTop: '30px' }}>
-            <div className="table-header">
-              <h2 className="table-title">Швидкі дії</h2>
-            </div>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '20px',
-              marginTop: '20px'
-            }}>
-              <button className="btn btn-primary" style={{ 
-                padding: '20px', 
-                flexDirection: 'column',
-                fontSize: '16px'
-              }}>
-                <span style={{ fontSize: '32px' }}>➕</span>
-                Додати курс
-              </button>
-              
-              <button className="btn btn-secondary" style={{ 
-                padding: '20px', 
-                flexDirection: 'column',
-                fontSize: '16px'
-              }}>
-                <span style={{ fontSize: '32px' }}>👤</span>
-                Додати користувача
-              </button>
-              
-              <button className="btn btn-secondary" style={{ 
-                padding: '20px', 
-                flexDirection: 'column',
-                fontSize: '16px'
-              }}>
-                <span style={{ fontSize: '32px' }}>📊</span>
-                Переглянути звіти
-              </button>
-              
-              <button className="btn btn-secondary" style={{ 
-                padding: '20px', 
-                flexDirection: 'column',
-                fontSize: '16px'
-              }}>
-                <span style={{ fontSize: '32px' }}>📧</span>
-                Розсилка
-              </button>
-            </div>
-          </div>
-        </main>
+      </main>
       </div>
     </div>
   );
