@@ -13,6 +13,7 @@ function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,11 +116,91 @@ function Dashboard() {
               ☰ Меню
             </button>
 
-            <div className="user-menu" onClick={handleLogout}>
-              <div className="user-avatar">
-                {user.first_name?.[0]}{user.last_name?.[0]}
+            <div className="user-menu-wrap" style={{ position: 'relative' }}>
+                  <div className="user-menu" onClick={() => setDropdownOpen(!dropdownOpen)}style={{ cursor: 'pointer' }}>
+        <div className="user-avatar">
+          {user.first_name?.[0]}{user.last_name?.[0]}
+        </div>
+        <span style={{ fontWeight: 500 }}>{user.full_name}</span>
+        <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>▾</span>
+      </div>
+
+      {dropdownOpen && (
+        <>
+          <div
+            onClick={() => setDropdownOpen(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+          />
+          <div style={{
+            position: 'absolute', top: '110%', right: 0,
+            background: 'var(--bg, #fff)',
+            border: '1px solid #e2e8f0',
+            borderRadius: 12, padding: '8px 0',
+            minWidth: 200, zIndex: 100,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+          }}>
+            <div style={{ padding: '8px 16px 10px', borderBottom: '1px solid #f0f0f0' }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#2c3e50' }}>{user.full_name}</div>
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>{user.email}</div>
+              <div style={{ fontSize: 11, marginTop: 4 }}>
+                <span style={{ background: '#fff5f0', color: '#ff6b35', padding: '2px 8px', borderRadius: 20, fontWeight: 500 }}>
+                  {user.role === 'admin' ? 'Адміністратор' : 'Викладач'}
+                </span>
               </div>
-              <span style={{ fontWeight: 500 }}>{user.full_name}</span>
+            </div>
+
+            <button onClick={() => { setDropdownOpen(false); }} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '10px 16px', border: 'none',
+              background: 'none', cursor: 'pointer', fontSize: 14, color: '#2c3e50',
+              textAlign: 'left'
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span>👤</span> Профіль
+            </button>
+
+            <button onClick={() => { setDropdownOpen(false); }} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '10px 16px', border: 'none',
+              background: 'none', cursor: 'pointer', fontSize: 14, color: '#2c3e50',
+              textAlign: 'left'
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span>⚙️</span> Налаштування
+            </button>
+
+            <button onClick={() => { setDropdownOpen(false); }} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '10px 16px', border: 'none',
+              background: 'none', cursor: 'pointer', fontSize: 14, color: '#2c3e50',
+              textAlign: 'left'
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span>⭐</span> Мій рейтинг
+            </button>
+
+            <div style={{ borderTop: '1px solid #f0f0f0', margin: '4px 0' }} />
+
+            <button onClick={() => { setDropdownOpen(false); handleLogout(); }} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '10px 16px', border: 'none',
+              background: 'none', cursor: 'pointer', fontSize: 14, color: '#e53e3e',
+              textAlign: 'left'
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span>🚪</span> Вийти
+            </button>
+          </div>
+        </>
+      )}
             </div>
           </div>
         </div>

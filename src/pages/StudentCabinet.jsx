@@ -13,6 +13,7 @@ function StudentCabinet() {
   const [view, setView] = useState('dashboard'); // 'dashboard' | 'course'
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const token = localStorage.getItem('auth_token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -75,20 +76,74 @@ function StudentCabinet() {
           </div>
         </div>
         <div className="sc-header-right">
-          <div className="sc-user-pill">
-            <div className="sc-avatar">
-              {user?.first_name?.[0]}{user?.last_name?.[0]}
+  <div style={{ position: 'relative' }}>
+    <div className="sc-user-pill" onClick={() => setDropdownOpen(!dropdownOpen)} style={{ cursor: 'pointer' }}>
+      <div className="sc-avatar">
+        {user?.first_name?.[0]}{user?.last_name?.[0]}
+      </div>
+      <span className="sc-username">{user?.full_name || user?.first_name}</span>
+      <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>▾</span>
+    </div>
+
+    {dropdownOpen && (
+      <>
+        <div
+          onClick={() => setDropdownOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+        />
+        <div style={{
+          position: 'absolute', top: '110%', right: 0,
+          background: '#fff', border: '1px solid #e2e8f0',
+          borderRadius: 12, padding: '8px 0',
+          minWidth: 200, zIndex: 100,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+        }}>
+          <div style={{ padding: '8px 16px 10px', borderBottom: '1px solid #f0f0f0' }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: '#2c3e50' }}>{user?.full_name}</div>
+            <div style={{ fontSize: 12, color: '#94a3b8' }}>{user?.email}</div>
+            <div style={{ fontSize: 11, marginTop: 4 }}>
+              <span style={{ background: '#fff5f0', color: '#ff6b35', padding: '2px 8px', borderRadius: 20, fontWeight: 500 }}>
+                Студент
+              </span>
             </div>
-            <span className="sc-username">{user?.full_name || user?.first_name}</span>
           </div>
-          <button className="sc-logout" onClick={handleLogout} title="Вийти">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+
+          {[
+            { icon: '👤', label: 'Профіль' },
+            { icon: '⚙️', label: 'Налаштування' },
+            { icon: '⭐', label: 'Мій рейтинг' },
+          ].map(item => (
+            <button key={item.label} onClick={() => setDropdownOpen(false)} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '10px 16px', border: 'none',
+              background: 'none', cursor: 'pointer', fontSize: 14, color: '#2c3e50',
+              textAlign: 'left'
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span>{item.icon}</span> {item.label}
+            </button>
+          ))}
+
+          <div style={{ borderTop: '1px solid #f0f0f0', margin: '4px 0' }} />
+
+          <button onClick={() => { setDropdownOpen(false); handleLogout(); }} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            width: '100%', padding: '10px 16px', border: 'none',
+            background: 'none', cursor: 'pointer', fontSize: 14, color: '#e53e3e',
+            textAlign: 'left'
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          >
+            <span>🚪</span> Вийти
           </button>
         </div>
+      </>
+    )}
+  </div>
+</div>
       </header>
 
       <div className="sc-body">
