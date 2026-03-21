@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Courses from './pages/Courses';
 import Dashboard from './pages/Dashboard';
+import Users from './pages/Users';
 import StudentCabinet from './pages/StudentCabinet';
+
 
 function App() {
   const getUser = () => {
@@ -57,6 +59,7 @@ function App() {
           {/* Адмін / Викладач */}
           <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
           <Route path="/courses" element={<AdminRoute><Courses /></AdminRoute>} />
+          <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
 
           {/* Студент / Батьки */}
           <Route path="/cabinet" element={<StudentRoute><StudentCabinet /></StudentRoute>} />
