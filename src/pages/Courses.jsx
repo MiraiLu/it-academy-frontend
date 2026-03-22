@@ -1,330 +1,505 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { coursesAPI } from '../services/api';
-import api from '../services/api';
+import Layout from '../components/Layout';
 
-// ============ Компоненти поза функцією (щоб не губився фокус) ============
-const Field = ({ label, required, value, onChange, type = 'text', error }) => (
-  <div style={{ marginBottom: '4px' }}>
-    <label style={S.label}>{label}{required && ' *'}</label>
-    <input
-      type={type} required={required} value={value} onChange={onChange}
-      style={{ ...S.input, borderColor: error ? '#e53e3e' : 'rgba(102,126,234,0.3)' }}
-    />
-    {error && <div style={S.err}>{error[0]}</div>}
-  </div>
-);
-
-const TextArea = ({ label, required, value, onChange, error }) => (
-  <div style={{ marginBottom: '4px' }}>
-    <label style={S.label}>{label}{required && ' *'}</label>
-    <textarea
-      required={required} value={value} onChange={onChange}
-      style={{ ...S.textarea, borderColor: error ? '#e53e3e' : 'rgba(102,126,234,0.3)' }}
-    />
-    {error && <div style={S.err}>{error[0]}</div>}
-  </div>
-);
-
-// ============ STYLES ============
+// ─────────────────────────────────────────────────────────────
+// СТИЛІ
+// ─────────────────────────────────────────────────────────────
 const S = {
-  page: { minHeight: '100vh', padding: '32px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' },
-  title: { fontSize: '32px', fontWeight: '700', color: '#1a1a2e', margin: 0 },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px',
+  },
+  title: {
+    fontSize: '26px',
+    fontWeight: '700',
+    color: '#1a1a2e',
+    margin: 0,
+  },
   btnPrimary: {
-    background: 'linear-gradient(135deg,#667eea,#764ba2)', color: 'white', border: 'none',
-    borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontSize: '14px',
-    fontWeight: '600', boxShadow: '0 4px 15px rgba(102,126,234,0.4)',
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50px',
+    padding: '11px 26px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    boxShadow: '0 4px 14px rgba(102,126,234,0.35)',
   },
-  search: {
-    width: '100%', padding: '14px 20px', borderRadius: '50px',
-    border: '1px solid rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.3)',
-    backdropFilter: 'blur(10px)', fontSize: '14px', marginBottom: '28px',
-    boxSizing: 'border-box', outline: 'none', color: '#1a1a2e',
+  searchBox: {
+    width: '100%',
+    padding: '11px 18px',
+    borderRadius: '12px',
+    border: '1.5px solid #e8e8ed',
+    background: '#fff',
+    fontSize: '14px',
+    marginBottom: '20px',
+    boxSizing: 'border-box',
+    outline: 'none',
+    color: '#1a1a2e',
   },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '20px' },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '16px',
+  },
   card: {
-    background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.4)',
-    borderRadius: '20px', padding: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+    background: '#fff',
+    border: '1px solid #e8e8ed',
+    borderRadius: '16px',
+    padding: '20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    transition: 'box-shadow 0.2s',
   },
-  badge: (ok) => ({
-    display: 'inline-block',
-    background: ok ? 'linear-gradient(135deg,#43e97b,#38f9d7)' : 'linear-gradient(135deg,#f6d365,#fda085)',
-    color: 'white', padding: '3px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '600',
-  }),
-  empty: {
-    textAlign: 'center', padding: '80px 20px', background: 'rgba(255,255,255,0.2)',
-    backdropFilter: 'blur(20px)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.4)',
+  cardTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1a1a2e',
+    marginBottom: '8px',
   },
-  overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(10,10,40,0.4)', backdropFilter: 'blur(8px)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+  cardMeta: {
+    fontSize: '13px',
+    color: '#6b6b8a',
+    marginBottom: '4px',
   },
-  modal: {
-    background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(30px)',
-    WebkitBackdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '24px', padding: '36px', width: '560px',
-    maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-  },
-  label: { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600', color: '#4a4a6a' },
-  input: {
-    width: '100%', padding: '10px 16px', borderRadius: '12px',
-    border: '1px solid rgba(102,126,234,0.3)', background: 'rgba(255,255,255,0.6)',
-    fontSize: '14px', boxSizing: 'border-box', outline: 'none', color: '#1a1a2e', marginBottom: '12px',
-  },
-  textarea: {
-    width: '100%', padding: '10px 16px', borderRadius: '12px',
-    border: '1px solid rgba(102,126,234,0.3)', background: 'rgba(255,255,255,0.6)',
-    fontSize: '14px', boxSizing: 'border-box', outline: 'none', color: '#1a1a2e',
-    minHeight: '90px', resize: 'vertical', fontFamily: 'inherit', marginBottom: '12px',
-  },
-  select: {
-    width: '100%', padding: '10px 16px', borderRadius: '12px',
-    border: '1px solid rgba(102,126,234,0.3)', background: 'rgba(255,255,255,0.6)',
-    fontSize: '14px', boxSizing: 'border-box', outline: 'none', color: '#1a1a2e', marginBottom: '16px',
-  },
-  row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' },
-  divider: {
-    fontSize: '12px', fontWeight: '700', color: '#667eea', textTransform: 'uppercase',
-    letterSpacing: '1px', margin: '12px 0', borderBottom: '1px solid rgba(102,126,234,0.2)', paddingBottom: '6px',
-  },
-  langTab: (active) => ({
-    padding: '6px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-    fontSize: '13px', fontWeight: '600',
-    background: active ? 'linear-gradient(135deg,#667eea,#764ba2)' : 'rgba(255,255,255,0.4)',
-    color: active ? 'white' : '#4a4a6a',
-  }),
-  btnCancel: {
-    padding: '12px 24px', borderRadius: '50px', border: '1px solid rgba(102,126,234,0.3)',
-    background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', color: '#4a4a6a',
-  },
-  btnSubmit: {
-    padding: '12px 28px', borderRadius: '50px', border: 'none',
-    background: 'linear-gradient(135deg,#667eea,#764ba2)', color: 'white',
-    cursor: 'pointer', fontSize: '14px', fontWeight: '600', boxShadow: '0 4px 15px rgba(102,126,234,0.4)',
-  },
-  price: {
-    fontWeight: '700', fontSize: '18px',
-    background: 'linear-gradient(135deg,#667eea,#764ba2)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+  cardActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '16px',
   },
   btnEdit: {
-    background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '10px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px',
+    flex: 1,
+    background: 'rgba(102,126,234,0.1)',
+    color: '#5a4fcf',
+    border: '1px solid rgba(102,126,234,0.25)',
+    borderRadius: '10px',
+    padding: '8px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
   },
-  btnDel: {
-    background: 'rgba(255,100,100,0.15)', border: '1px solid rgba(255,100,100,0.3)',
-    borderRadius: '10px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', color: '#e53e3e',
+  btnDelete: {
+    flex: 1,
+    background: 'rgba(239,68,68,0.08)',
+    color: '#dc2626',
+    border: '1px solid rgba(239,68,68,0.2)',
+    borderRadius: '10px',
+    padding: '8px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
   },
-  err: { color: '#e53e3e', fontSize: '12px', marginBottom: '8px' },
+  badge: (published) => ({
+    display: 'inline-block',
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '3px 10px',
+    borderRadius: '20px',
+    marginBottom: '10px',
+    background: published ? 'rgba(16,185,129,0.12)' : 'rgba(107,114,128,0.1)',
+    color: published ? '#059669' : '#6b7280',
+  }),
+  emptyState: {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#6b6b8a',
+    fontSize: '15px',
+  },
+  // Модалка
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(10,10,30,0.4)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modal: {
+    background: '#fff',
+    borderRadius: '20px',
+    padding: '30px',
+    width: '100%',
+    maxWidth: '540px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#1a1a2e',
+    marginBottom: '22px',
+  },
+  label: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#4a4a6a',
+    marginBottom: '5px',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 13px',
+    borderRadius: '10px',
+    border: '1.5px solid #e8e8ed',
+    background: '#fafafa',
+    fontSize: '14px',
+    color: '#1a1a2e',
+    outline: 'none',
+    boxSizing: 'border-box',
+    marginBottom: '14px',
+  },
+  textarea: {
+    width: '100%',
+    padding: '10px 13px',
+    borderRadius: '10px',
+    border: '1.5px solid #e8e8ed',
+    background: '#fafafa',
+    fontSize: '14px',
+    color: '#1a1a2e',
+    outline: 'none',
+    boxSizing: 'border-box',
+    marginBottom: '14px',
+    resize: 'vertical',
+    minHeight: '76px',
+    fontFamily: 'inherit',
+  },
+  select: {
+    width: '100%',
+    padding: '10px 13px',
+    borderRadius: '10px',
+    border: '1.5px solid #e8e8ed',
+    background: '#fafafa',
+    fontSize: '14px',
+    color: '#1a1a2e',
+    outline: 'none',
+    boxSizing: 'border-box',
+    marginBottom: '14px',
+    cursor: 'pointer',
+  },
+  errorText: {
+    fontSize: '12px',
+    color: '#dc2626',
+    marginTop: '-10px',
+    marginBottom: '10px',
+  },
+  twoCol: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  btnCancel: {
+    background: '#f4f5f7',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '11px 22px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    color: '#6b6b8a',
+  },
+  btnSubmit: {
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '11px 26px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+  },
 };
 
-const EMPTY = {
-  title: '', title_uk: '', description: '', description_uk: '',
-  short_description: '', short_description_uk: '',
-  category_id: '', level: 'beginner', language: 'uk', price: '0', is_published: false,
+// ─────────────────────────────────────────────────────────────
+// ДОПОМІЖНІ КОМПОНЕНТИ — ПОЗА функцією Courses (щоб не губився фокус!)
+// ─────────────────────────────────────────────────────────────
+const Field = ({ label, required, value, onChange, type = 'text', error, placeholder }) => (
+  <div>
+    <label style={S.label}>
+      {label}{required && <span style={{ color: '#dc2626' }}> *</span>}
+    </label>
+    <input
+      type={type}
+      required={required}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={{ ...S.input, borderColor: error ? '#dc2626' : '#e8e8ed' }}
+    />
+    {error && <div style={S.errorText}>{Array.isArray(error) ? error[0] : error}</div>}
+  </div>
+);
+
+const TextArea = ({ label, required, value, onChange, error, placeholder }) => (
+  <div>
+    <label style={S.label}>
+      {label}{required && <span style={{ color: '#dc2626' }}> *</span>}
+    </label>
+    <textarea
+      required={required}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={{ ...S.textarea, borderColor: error ? '#dc2626' : '#e8e8ed' }}
+    />
+    {error && <div style={S.errorText}>{Array.isArray(error) ? error[0] : error}</div>}
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────────
+const EMPTY_FORM = {
+  title: '', title_uk: '',
+  description: '', description_uk: '',
+  category_id: '', language: 'uk',
+  level: 'beginner', price: '',
+  is_published: false,
 };
 
-const LVL = { beginner: 'Початківець', intermediate: 'Середній', advanced: 'Просунутий' };
-
-// ============ ГОЛОВНИЙ КОМПОНЕНТ ============
-export default function Courses() {
-  const [courses, setCourses] = useState([]);
+// ─────────────────────────────────────────────────────────────
+// ГОЛОВНИЙ КОМПОНЕНТ
+// ─────────────────────────────────────────────────────────────
+function Courses() {
+  const [courses, setCourses]       = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [search, setSearch] = useState('');
-  const [form, setForm] = useState(EMPTY);
-  const [errors, setErrors] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [formLang, setFormLang] = useState('uk');
+  const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState('');
+  const [showModal, setShowModal]   = useState(false);
+  const [editingCourse, setEditing] = useState(null);
+  const [form, setForm]             = useState(EMPTY_FORM);
+  const [errors, setErrors]         = useState({});
+  const [saving, setSaving]         = useState(false);
 
-  useEffect(() => { load(); loadCats(); }, []);
+  useEffect(() => { loadAll(); }, []);
 
-  const load = async () => {
+  const loadAll = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const r = await coursesAPI.getAll(search ? { search } : {});
-      if (r.data.success) setCourses(r.data.data.data || []);
-    } finally { setLoading(false); }
+      const [cRes, catRes] = await Promise.all([
+        coursesAPI.getAll(),
+        coursesAPI.getCategories().catch(() => ({ data: { data: [] } })),
+      ]);
+      setCourses(cRes.data?.data?.data || cRes.data?.data || []);
+      setCategories(catRes.data?.data || []);
+    } catch (e) {
+      console.error('Помилка завантаження:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadCats = async () => {
-    try {
-      const r = await coursesAPI.getCategories();
-      if (r.data.success) setCategories(r.data.data || []);
-    } catch {}
+  const setField = useCallback((key, value) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+    setErrors(prev => ({ ...prev, [key]: null }));
+  }, []);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm(EMPTY_FORM);
+    setErrors({});
+    setShowModal(true);
   };
 
-  const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-  const setChk = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.checked }));
-
-  const openCreate = () => { setEditing(null); setForm(EMPTY); setErrors({}); setFormLang('uk'); setShowModal(true); };
-  const openEdit = (c) => {
-    setEditing(c);
-    setForm({ title: c.title||'', title_uk: c.title_uk||'', description: c.description||'',
-      description_uk: c.description_uk||'', short_description: c.short_description||'',
-      short_description_uk: c.short_description_uk||'', category_id: c.category_id||'',
-      level: c.level||'beginner', language: c.language||'uk', price: c.price||'0', is_published: c.is_published||false });
-    setErrors({}); setFormLang('uk'); setShowModal(true);
+  const openEdit = (course) => {
+    setEditing(course);
+    setForm({
+      title:          course.title || '',
+      title_uk:       course.title_uk || '',
+      description:    course.description || '',
+      description_uk: course.description_uk || '',
+      category_id:    course.category_id || '',
+      language:       course.language || 'uk',
+      level:          course.level || 'beginner',
+      price:          course.price || '',
+      is_published:   !!course.is_published,
+    });
+    setErrors({});
+    setShowModal(true);
   };
 
-  const submit = async (e) => {
-    e.preventDefault(); setSaving(true); setErrors({});
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErrors({});
+    const slug = (form.title_uk || form.title || 'course')
+      .toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      + '-' + Date.now();
     try {
-      const payload = { ...form,
-        slug: form.title.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-' + Date.now(),
-        price: parseFloat(form.price)||0,
-        category_id: form.category_id ? parseInt(form.category_id) : null,
-      };
-      if (editing) await api.put(`/instructor/courses/${editing.id}`, payload);
-      else await api.post('/instructor/courses', payload);
-      setShowModal(false); load();
+      if (editingCourse) {
+        await coursesAPI.update(editingCourse.id, { ...form, slug });
+      } else {
+        await coursesAPI.create({ ...form, slug });
+      }
+      setShowModal(false);
+      loadAll();
     } catch (err) {
-      if (err.response?.data?.errors) setErrors(err.response.data.errors);
-      else alert(err.response?.data?.message || err.message);
-    } finally { setSaving(false); }
+      if (err.response?.status === 422) {
+        setErrors(err.response.data.errors || {});
+      } else {
+        alert('Помилка: ' + (err.response?.data?.message || err.message));
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const del = async (id) => {
-    if (!window.confirm('Видалити курс?')) return;
-    try { await api.delete(`/instructor/courses/${id}`); load(); } catch { alert('Помилка'); }
+  const handleDelete = async (course) => {
+    if (!window.confirm(`Видалити курс "${course.title_uk || course.title}"?`)) return;
+    try {
+      await coursesAPI.delete(course.id);
+      loadAll();
+    } catch { alert('Не вдалося видалити'); }
   };
 
-  const isUk = formLang === 'uk';
+  const filtered = courses.filter(c => {
+    const q = search.toLowerCase();
+    return (c.title || '').toLowerCase().includes(q) ||
+           (c.title_uk || '').toLowerCase().includes(q);
+  });
 
+  // ─────────────────────────────────────────────────────────────
+  // РЕНДЕР
+  // ─────────────────────────────────────────────────────────────
   return (
-    <div style={S.page}>
+    <Layout>
+
       <div style={S.header}>
-        <h1 style={S.title}>📚 Курси</h1>
-        <button style={S.btnPrimary} onClick={openCreate}>+ Створити курс</button>
+        <h1 style={S.title}>Курси</h1>
+        <button style={S.btnPrimary} onClick={openCreate}>+ Новий курс</button>
       </div>
 
-      <input style={S.search} placeholder="🔍  Пошук курсів..."
-        value={search} onChange={(e) => setSearch(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && load()} />
+      <input
+        style={S.searchBox}
+        placeholder="Пошук курсів..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
 
       {loading ? (
-        <div style={S.empty}><p>⏳ Завантаження...</p></div>
-      ) : courses.length === 0 ? (
-        <div style={S.empty}>
-          <div style={{ fontSize: '60px' }}>📚</div>
-          <p style={{ color: '#4a4a6a' }}>Курсів ще немає. Створіть перший!</p>
+        <div style={S.emptyState}>Завантаження...</div>
+      ) : filtered.length === 0 ? (
+        <div style={S.emptyState}>
+          {search ? 'Нічого не знайдено' : 'Курсів ще немає. Створіть перший!'}
         </div>
       ) : (
         <div style={S.grid}>
-          {courses.map(c => (
-            <div key={c.id} style={S.card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span style={S.badge(c.is_published)}>{c.is_published ? '✓ Опубліковано' : '✎ Чернетка'}</span>
-                <span style={{ fontSize: '11px', color: '#8888aa', background: 'rgba(255,255,255,0.4)', padding: '3px 10px', borderRadius: '20px' }}>
-                  {LVL[c.level]}
-                </span>
+          {filtered.map(course => (
+            <div key={course.id} style={S.card}>
+              <span style={S.badge(course.is_published)}>
+                {course.is_published ? 'Опубліковано' : 'Чернетка'}
+              </span>
+              <div style={S.cardTitle}>{course.title_uk || course.title || '—'}</div>
+              {course.title && course.title !== course.title_uk && (
+                <div style={S.cardMeta}>{course.title}</div>
+              )}
+              <div style={S.cardMeta}>
+                Рівень: {course.level || '—'} &nbsp;·&nbsp; Мова: {course.language || '—'}
               </div>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 8px' }}>
-                {c.title_uk || c.title}
-              </h3>
-              <p style={{ fontSize: '13px', color: '#4a4a6a', margin: '0 0 16px', lineHeight: '1.5' }}>
-                {c.short_description_uk || c.short_description || 'Без опису'}
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={S.price}>{parseFloat(c.price) > 0 ? `${c.price} грн` : 'Безкоштовно'}</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={S.btnEdit} onClick={() => openEdit(c)}>✏️</button>
-                  <button style={S.btnDel} onClick={() => del(c.id)}>🗑️</button>
-                </div>
+              <div style={S.cardMeta}>
+                Ціна: {course.price ? `${course.price} грн` : 'Безкоштовно'}
+              </div>
+              {course.enrolled_count !== undefined && (
+                <div style={S.cardMeta}>Студентів: {course.enrolled_count}</div>
+              )}
+              <div style={S.cardActions}>
+                <button style={S.btnEdit} onClick={() => openEdit(course)}>✏️ Редагувати</button>
+                <button style={S.btnDelete} onClick={() => handleDelete(course)}>🗑 Видалити</button>
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Модальне вікно */}
       {showModal && (
-        <div style={S.overlay} onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
+        <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
           <div style={S.modal}>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 20px' }}>
-              {editing ? '✏️ Редагувати курс' : '✨ Новий курс'}
+            <h2 style={S.modalTitle}>
+              {editingCourse ? '✏️ Редагувати курс' : '✨ Новий курс'}
             </h2>
-            <form onSubmit={submit}>
-
-              {/* Перемикач мови контенту */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', color: '#4a4a6a', fontWeight: '600' }}>КОНТЕНТ:</span>
-                {['uk','en'].map(l => (
-                  <button key={l} type="button" style={S.langTab(formLang===l)} onClick={() => setFormLang(l)}>
-                    {l === 'uk' ? '🇺🇦 UA' : '🇬🇧 EN'}
-                  </button>
-                ))}
-                <span style={{ fontSize: '11px', color: '#aaa', marginLeft: '4px' }}>
-                  (заповніть обидві мови)
-                </span>
+            <form onSubmit={handleSubmit}>
+              <div style={S.twoCol}>
+                <Field label="Назва (UA)" required value={form.title_uk}
+                  onChange={e => setField('title_uk', e.target.value)}
+                  placeholder="Назва українською" error={errors.title_uk} />
+                <Field label="Title (EN)" value={form.title}
+                  onChange={e => setField('title', e.target.value)}
+                  placeholder="English title" error={errors.title} />
               </div>
+              <TextArea label="Опис (UA)" required value={form.description_uk}
+                onChange={e => setField('description_uk', e.target.value)}
+                placeholder="Короткий опис курсу українською..." error={errors.description_uk} />
+              <TextArea label="Description (EN)" value={form.description}
+                onChange={e => setField('description', e.target.value)}
+                placeholder="Short description in English..." error={errors.description} />
 
-              {/* Поля контенту — UA або EN */}
-              {isUk ? (
-                <>
-                  <Field label="Назва курсу (UA)" required value={form.title_uk} onChange={set('title_uk')} error={errors.title_uk} />
-                  <TextArea label="Повний опис (UA)" required value={form.description_uk} onChange={set('description_uk')} error={errors.description_uk} />
-                  <Field label="Короткий опис (UA)" value={form.short_description_uk} onChange={set('short_description_uk')} error={errors.short_description_uk} />
-                </>
-              ) : (
-                <>
-                  <Field label="Course title (EN)" required value={form.title} onChange={set('title')} error={errors.title} />
-                  <TextArea label="Full description (EN)" required value={form.description} onChange={set('description')} error={errors.description} />
-                  <Field label="Short description (EN)" value={form.short_description} onChange={set('short_description')} error={errors.short_description} />
-                </>
-              )}
-
-              <div style={S.divider}>Налаштування</div>
-
-              <div style={S.row2}>
+              <div style={S.twoCol}>
                 <div>
-                  <label style={S.label}>Категорія *</label>
-                  <select value={form.category_id} onChange={set('category_id')} style={S.select}>
-                    <option value="">Оберіть...</option>
+                  <label style={S.label}>Категорія</label>
+                  <select value={form.category_id}
+                    onChange={e => setField('category_id', e.target.value)} style={S.select}>
+                    <option value="">— без категорії —</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name_uk || cat.name}</option>
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon ? `${cat.icon} ` : ''}{cat.name_uk || cat.name}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={S.label}>Рівень *</label>
-                  <select value={form.level} onChange={set('level')} style={S.select}>
-                    <option value="beginner">Початківець</option>
-                    <option value="intermediate">Середній</option>
-                    <option value="advanced">Просунутий</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={S.row2}>
-                <div>
-                  <label style={S.label}>Мова викладання *</label>
-                  <select value={form.language} onChange={set('language')} style={S.select}>
+                  <label style={S.label}>Мова викладання <span style={{ color: '#dc2626' }}>*</span></label>
+                  <select value={form.language}
+                    onChange={e => setField('language', e.target.value)} style={S.select}>
                     <option value="uk">🇺🇦 Українська</option>
                     <option value="en">🇬🇧 English</option>
                     <option value="pl">🇵🇱 Polski</option>
                   </select>
                 </div>
-                <Field label="Ціна (грн) *" type="number" required value={form.price} onChange={set('price')} error={errors.price} />
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={form.is_published} onChange={setChk('is_published')} style={{ width: '16px', height: '16px' }} />
-                <span style={{ fontSize: '14px', color: '#4a4a6a', fontWeight: '500' }}>Опублікувати курс</span>
+              <div style={S.twoCol}>
+                <div>
+                  <label style={S.label}>Рівень</label>
+                  <select value={form.level}
+                    onChange={e => setField('level', e.target.value)} style={S.select}>
+                    <option value="beginner">Початківець</option>
+                    <option value="intermediate">Середній</option>
+                    <option value="advanced">Просунутий</option>
+                  </select>
+                </div>
+                <Field label="Ціна (грн)" type="number" value={form.price}
+                  onChange={e => setField('price', e.target.value)}
+                  placeholder="0 = безкоштовно" error={errors.price} />
+              </div>
+
+              <label style={{ display:'flex', alignItems:'center', gap:'10px',
+                marginBottom:'22px', cursor:'pointer', fontSize:'14px', color:'#4a4a6a', fontWeight:'500' }}>
+                <input type="checkbox" checked={form.is_published}
+                  onChange={e => setField('is_published', e.target.checked)}
+                  style={{ width:'16px', height:'16px', cursor:'pointer' }} />
+                Опублікувати курс
               </label>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button type="button" style={S.btnCancel} onClick={() => setShowModal(false)}>Скасувати</button>
+              <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end' }}>
+                <button type="button" style={S.btnCancel} onClick={() => setShowModal(false)}>
+                  Скасувати
+                </button>
                 <button type="submit" style={S.btnSubmit} disabled={saving}>
-                  {saving ? '⏳...' : editing ? '💾 Зберегти' : '✨ Створити'}
+                  {saving ? '⏳ Збереження...' : editingCourse ? '💾 Зберегти' : '✨ Створити'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+
+    </Layout>
   );
 }
+
+export default Courses;

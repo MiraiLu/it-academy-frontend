@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Courses from './pages/Courses';
 import Dashboard from './pages/Dashboard';
+import Courses from './pages/Courses';
 import Users from './pages/Users';
+import Enrollments from './pages/Enrollments';
+import Lessons from './pages/Lessons';
 import StudentCabinet from './pages/StudentCabinet';
 
 
@@ -60,6 +62,8 @@ function App() {
           <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
           <Route path="/courses" element={<AdminRoute><Courses /></AdminRoute>} />
           <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
+          <Route path="/enrollments" element={<PrivateRoute><Enrollments /></PrivateRoute>} />
+          <Route path="/lessons" element={<PrivateRoute><Lessons /></PrivateRoute>} />
 
           {/* Студент / Батьки */}
           <Route path="/cabinet" element={<StudentRoute><StudentCabinet /></StudentRoute>} />

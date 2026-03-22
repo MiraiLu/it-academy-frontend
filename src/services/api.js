@@ -52,6 +52,14 @@ export const enrollmentsAPI = {
   getMyCourses: () => api.get('/my-courses'),
 };
 
+// Lessons API
+export const lessonsAPI = {
+  getAll:  (params) => api.get('/lessons', { params }),
+  create:  (data) => api.post('/lessons', data),
+  update:  (id, data) => api.put(`/lessons/${id}`, data),
+  delete:  (id) => api.delete(`/lessons/${id}`),
+};
+
 // Admin API
 export const adminAPI = {
   getUsers: (params) => api.get('/admin/users', { params }),
@@ -59,6 +67,9 @@ export const adminAPI = {
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   createUser: (data) => api.post('/admin/users', data),
+  getEnrollments: (params) => api.get('/admin/enrollments', { params }),
+  createEnrollment: (data) => api.post('/admin/enrollments', data),
+  deleteEnrollment: (id) => api.delete(`/admin/enrollments/${id}`),
 };
 
 export default api;
