@@ -104,6 +104,17 @@ function YouTubeUploader({ lessonId, lessonTitle, onUploaded }) {
       checkStatus();
       window.history.replaceState({}, '', window.location.pathname);
     }
+
+    if (params.get('youtube') === 'error') {
+      const reason = params.get('reason');
+      const reasonMap = {
+        access_denied: 'Google заблокував доступ. Якщо OAuth app у статусі Testing, додай цей Gmail у Test users в Google Cloud.',
+        no_code: 'Google не повернув код авторизації. Спробуй ще раз.',
+      };
+
+      setError(reasonMap[reason] || `Помилка авторизації Google: ${reason || 'unknown_error'}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   const checkStatus = async () => {

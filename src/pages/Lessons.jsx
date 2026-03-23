@@ -208,7 +208,8 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
   const st = LESSON_STATUS[lesson.status] || LESSON_STATUS.draft;
 
   return (
-    <div style={S.lessonCard}
+    <div style={{ ...S.lessonCard, cursor: 'pointer' }}
+      onClick={() => setExpanded(!expanded)}
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
     >
@@ -231,8 +232,9 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
           </div>
         </div>
         <button
-          onClick={() => setExpanded(!expanded)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8', padding: 4 }}
+          type="button"
+          aria-label={expanded ? 'Згорнути урок' : 'Розгорнути урок'}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8', padding: 4, pointerEvents: 'none' }}
         >
           {expanded ? '▲' : '▼'}
         </button>
@@ -254,7 +256,7 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
                 <div style={S.infoRow}>
                   <span style={S.infoIcon}>🔗</span>
                   <span style={{ color: '#5a6c7d' }}>Посилання на заняття:</span>
-                  <a href={lesson.meeting_link} target="_blank" rel="noreferrer" style={S.link}>
+                  <a href={lesson.meeting_link} target="_blank" rel="noreferrer" style={S.link} onClick={e => e.stopPropagation()}>
                     {lesson.meeting_link}
                   </a>
                 </div>
@@ -263,7 +265,7 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
                 <div style={S.infoRow}>
                   <span style={S.infoIcon}>▶️</span>
                   <span style={{ color: '#5a6c7d' }}>Запис заняття:</span>
-                  <a href={lesson.recording_url} target="_blank" rel="noreferrer" style={S.link}>
+                  <a href={lesson.recording_url} target="_blank" rel="noreferrer" style={S.link} onClick={e => e.stopPropagation()}>
                     YouTube →
                   </a>
                 </div>
@@ -278,7 +280,7 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
                 <div style={S.infoRow}>
                   <span style={S.infoIcon}>▶️</span>
                   <span style={{ color: '#5a6c7d' }}>Відео:</span>
-                  <a href={lesson.video_url} target="_blank" rel="noreferrer" style={S.link}>
+                  <a href={lesson.video_url} target="_blank" rel="noreferrer" style={S.link} onClick={e => e.stopPropagation()}>
                     Переглянути →
                   </a>
                 </div>
@@ -287,7 +289,7 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
                 <div style={S.infoRow}>
                   <span style={S.infoIcon}>📄</span>
                   <span style={{ color: '#5a6c7d' }}>Матеріали:</span>
-                  <a href={lesson.content_url} target="_blank" rel="noreferrer" style={S.link}>
+                  <a href={lesson.content_url} target="_blank" rel="noreferrer" style={S.link} onClick={e => e.stopPropagation()}>
                     Відкрити →
                   </a>
                 </div>
@@ -320,23 +322,23 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
 
           {/* Кнопки дій */}
           <div style={S.btnGroup}>
-            <button style={S.btn('secondary')} onClick={() => onEdit(lesson)}>
+            <button style={S.btn('secondary')} onClick={(e) => { e.stopPropagation(); onEdit(lesson); }}>
               ✏️ Редагувати
             </button>
 
             {lesson.type === TYPE_LIVE && !lesson.recording_url && lesson.status === 'completed' && (
-              <button style={S.btn('youtube')} onClick={() => onAddVideo(lesson)}>
+              <button style={S.btn('youtube')} onClick={(e) => { e.stopPropagation(); onAddVideo(lesson); }}>
                 ▶ Додати YouTube запис
               </button>
             )}
 
             {!lesson.homework && (
-              <button style={S.btn('success')} onClick={() => onAddHomework(lesson)}>
+              <button style={S.btn('success')} onClick={(e) => { e.stopPropagation(); onAddHomework(lesson); }}>
                 📋 Додати ДЗ
               </button>
             )}
 
-            <button style={S.btn('danger')} onClick={() => onDelete(lesson.id)}>
+            <button style={S.btn('danger')} onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }}>
               🗑 Видалити
             </button>
           </div>
