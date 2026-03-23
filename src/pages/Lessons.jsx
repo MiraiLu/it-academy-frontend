@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/Layout';
 import { coursesAPI } from '../services/api';
+import YouTubeUploader from '../components/YouTubeUploader';
 import api from '../services/api';
 
 // ─────────────────────────────────────────────────────────────
@@ -730,24 +731,19 @@ function Lessons() {
 
       {/* ══ МОДАЛКА YouTube ══════════════════════════════════ */}
       {ytModal && (
-        <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setYtModal(null); }}>
-          <div style={{ ...S.modal, maxWidth: 460 }}>
-            <div style={S.modalTitle}>▶ Додати запис заняття</div>
-            <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
-              Урок: <strong>{ytModal.title}</strong>
-            </p>
-            <label style={S.label}>YouTube посилання</label>
-            <input style={S.formInput} placeholder="https://youtube.com/watch?v=..."
-              value={ytUrl} onChange={e => setYtUrl(e.target.value)} />
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: -10, marginBottom: 16 }}>
-              💡 Завантаж відео на YouTube і вкажи посилання — студенти побачать його на платформі
-            </p>
-            <div style={S.modalFooter}>
-              <button style={S.btnCancel} onClick={() => setYtModal(null)}>Скасувати</button>
-              <button style={{ ...S.btnSave, background: '#ff0000' }} onClick={handleSaveYt}>
-                ▶ Зберегти запис
-              </button>
-            </div>
+        <div style={S.overlay}>
+          <div style={{ ...S.modal, maxWidth: 520 }}>
+            <YouTubeUploader
+              lessonId={ytModal.id}
+              lessonTitle={ytModal.title}
+              onUploaded={(url) => {
+                setYtModal(null);
+                fetchLessons();
+              }}
+            />
+            <button style={{ ...S.btnCancel, marginTop: 12 }} onClick={() => setYtModal(null)}>
+              Закрити
+            </button>
           </div>
         </div>
       )}

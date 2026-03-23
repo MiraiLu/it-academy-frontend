@@ -60,6 +60,16 @@ export const lessonsAPI = {
   delete:  (id) => api.delete(`/lessons/${id}`),
 };
 
+// Quizzes API
+export const quizzesAPI = {
+  getAll: (params) => api.get('/quizzes', { params }),
+  create: (data) => api.post('/quizzes', data),
+  update: (id, data) => api.put(`/quizzes/${id}`, data),
+  delete: (id) => api.delete(`/quizzes/${id}`),
+  getQuestions: (id) => api.get(`/quizzes/${id}/questions`),
+  saveQuestions: (id, data) => api.post(`/quizzes/${id}/questions`, data),
+};
+
 // Admin API
 export const adminAPI = {
   getUsers: (params) => api.get('/admin/users', { params }),

@@ -6,6 +6,7 @@ import Courses from './pages/Courses';
 import Users from './pages/Users';
 import Enrollments from './pages/Enrollments';
 import Lessons from './pages/Lessons';
+import Quizzes from './pages/Quizzes';
 import StudentCabinet from './pages/StudentCabinet';
 
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
           <Route path="/enrollments" element={<PrivateRoute><Enrollments /></PrivateRoute>} />
           <Route path="/lessons" element={<PrivateRoute><Lessons /></PrivateRoute>} />
+          <Route path="/quizzes" element={<PrivateRoute><Quizzes /></PrivateRoute>} />
 
           {/* Студент / Батьки */}
           <Route path="/cabinet" element={<StudentRoute><StudentCabinet /></StudentRoute>} />
