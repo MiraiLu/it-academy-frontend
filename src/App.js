@@ -7,6 +7,10 @@ import Users from './pages/Users';
 import Enrollments from './pages/Enrollments';
 import Lessons from './pages/Lessons';
 import Quizzes from './pages/Quizzes';
+import Assignments  from './pages/Assignments';
+import Certificates from './pages/Certificates';
+import Categories from './pages/Categories';
+import Analytics  from './pages/Analytics';
 import StudentCabinet from './pages/StudentCabinet';
 
 
@@ -66,6 +70,11 @@ function App() {
           <Route path="/enrollments" element={<PrivateRoute><Enrollments /></PrivateRoute>} />
           <Route path="/lessons" element={<PrivateRoute><Lessons /></PrivateRoute>} />
           <Route path="/quizzes" element={<PrivateRoute><Quizzes /></PrivateRoute>} />
+          <Route path="/assignments" element={<PrivateRoute><Assignments /></PrivateRoute>} />
+          <Route path="/certificates" element={<PrivateRoute><Certificates /></PrivateRoute>} />
+          <Route path="/categories" element={<PrivateRoute><Categories /></PrivateRoute>} />
+          <Route path="/analytics"  element={<PrivateRoute><Analytics /></PrivateRoute>} />
+
 
           {/* Студент / Батьки */}
           <Route path="/cabinet" element={<StudentRoute><StudentCabinet /></StudentRoute>} />

@@ -126,6 +126,7 @@ const EMPTY = {
   password: '',
   role: 'student',
   status: 'active',
+  access_scope: 'full',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ function AddUserModal({ onClose, onSaved, editUser = null }) {
   const [form, setForm] = useState(
     editUser
       ? { first_name: editUser.first_name, last_name: editUser.last_name,
-          email: editUser.email, password: '', role: editUser.role, status: editUser.status }
+          email: editUser.email, password: '', role: editUser.role, status: editUser.status, access_scope: editUser.instructor?.access_scope || 'full' }
       : EMPTY
   );
   const [error, setError] = useState('');
@@ -235,6 +236,16 @@ function AddUserModal({ onClose, onSaved, editUser = null }) {
         </div>
 
         {/* Кнопки */}
+        {form.role === 'instructor' && (
+          <div style={S.field}>
+            <label style={S.label}>Р РµР¶РёРј РґРѕСЃС‚СѓРїСѓ РІРёРєР»Р°РґР°С‡Р°</label>
+            <select value={form.access_scope} onChange={e => set('access_scope', e.target.value)} style={S.select}>
+              <option value="full">РџРѕРІРЅРёР№ РґРѕСЃС‚СѓРї РґРѕ РєСѓСЂСЃС–РІ</option>
+              <option value="live_only">Р›РёС€Рµ live-Р·Р°РЅСЏС‚С‚СЏ</option>
+            </select>
+          </div>
+        )}
+
         <div style={S.footer}>
           <button style={S.btnCancel} onClick={onClose}>Скасувати</button>
           <button style={S.btnSave} onClick={handleSave} disabled={saving}>

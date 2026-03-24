@@ -31,6 +31,16 @@ const NAV = [
   },
 ];
 
+const isNavItemVisible = (userRole, isLiveOnlyInstructor, path) => {
+  if (userRole === 'admin') return true;
+
+  if (isLiveOnlyInstructor) {
+    return ['/dashboard', '/courses', '/lessons'].includes(path);
+  }
+
+  return ['/dashboard', '/courses', '/lessons', '/quizzes', '/assignments', '/certificates'].includes(path);
+};
+
 // ─── Стилі ──────────────────────────────────────────────────
 const S = {
   root: {
@@ -163,15 +173,28 @@ const S = {
 function Layout({ children }) {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  })();
 
   // Ім'я з localStorage
-  const userName  = localStorage.getItem('user_name') || 'Admin Academy';
-  const userRole  = localStorage.getItem('user_role') || 'admin';
+  const userName  = storedUser?.full_name || localStorage.getItem('user_name') || 'Admin Academy';
+  const userRole  = storedUser?.role || localStorage.getItem('user_role') || 'admin';
+  const isLiveOnlyInstructor = !!storedUser?.is_live_only_instructor;
   const initials  = userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const visibleNav = NAV.map(section => ({
+    ...section,
+    items: section.items.filter(item => isNavItemVisible(userRole, isLiveOnlyInstructor, item.path)),
+  })).filter(section => section.items.length > 0);
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_role');
     navigate('/login');
@@ -190,7 +213,7 @@ function Layout({ children }) {
 
         {/* Навігація */}
         <nav style={S.nav}>
-          {NAV.map(section => (
+          {visibleNav.map(section => (
             <div key={section.group}>
               <div style={S.group}>{section.group}</div>
               {section.items.map(item => {

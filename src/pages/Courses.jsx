@@ -265,6 +265,16 @@ const EMPTY_FORM = {
 // ГОЛОВНИЙ КОМПОНЕНТ
 // ─────────────────────────────────────────────────────────────
 function Courses() {
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  })();
+  const isLiveOnlyInstructor = currentUser?.is_live_only_instructor;
+  const canManageCourses = !isLiveOnlyInstructor;
+
   const [courses, setCourses]       = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -281,7 +291,7 @@ function Courses() {
     setLoading(true);
     try {
       const [cRes, catRes] = await Promise.all([
-        coursesAPI.getAll(),
+        coursesAPI.getManageAll(),
         coursesAPI.getCategories().catch(() => ({ data: { data: [] } })),
       ]);
       setCourses(cRes.data?.data?.data || cRes.data?.data || []);
@@ -299,6 +309,7 @@ function Courses() {
   }, []);
 
   const openCreate = () => {
+    if (!canManageCourses) return;
     setEditing(null);
     setForm(EMPTY_FORM);
     setErrors({});
@@ -306,6 +317,7 @@ function Courses() {
   };
 
   const openEdit = (course) => {
+    if (!canManageCourses) return;
     setEditing(course);
     setForm({
       title:          course.title || '',
@@ -324,6 +336,7 @@ function Courses() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canManageCourses) return;
     setSaving(true);
     setErrors({});
     const slug = (form.title_uk || form.title || 'course')
@@ -349,6 +362,7 @@ function Courses() {
   };
 
   const handleDelete = async (course) => {
+    if (!canManageCourses) return;
     if (!window.confirm(`Видалити курс "${course.title_uk || course.title}"?`)) return;
     try {
       await coursesAPI.delete(course.id);
@@ -361,6 +375,7 @@ function Courses() {
     return (c.title || '').toLowerCase().includes(q) ||
            (c.title_uk || '').toLowerCase().includes(q);
   });
+  const cardActionsStyle = canManageCourses ? S.cardActions : { ...S.cardActions, display: 'none' };
 
   // ─────────────────────────────────────────────────────────────
   // РЕНДЕР
@@ -406,7 +421,7 @@ function Courses() {
               {course.enrolled_count !== undefined && (
                 <div style={S.cardMeta}>Студентів: {course.enrolled_count}</div>
               )}
-              <div style={S.cardActions}>
+              <div style={cardActionsStyle}>
                 <button style={S.btnEdit} onClick={() => openEdit(course)}>✏️ Редагувати</button>
                 <button style={S.btnDelete} onClick={() => handleDelete(course)}>🗑 Видалити</button>
               </div>
@@ -416,7 +431,7 @@ function Courses() {
       )}
 
       {/* Модальне вікно */}
-      {showModal && (
+      {canManageCourses && showModal && (
         <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
           <div style={S.modal}>
             <h2 style={S.modalTitle}>

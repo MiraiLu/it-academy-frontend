@@ -37,6 +37,7 @@ export const authAPI = {
 // Courses API
 export const coursesAPI = {
   getAll: (params) => api.get('/courses', { params }),
+  getManageAll: (params) => api.get('/manage/courses', { params }),
   getOne: (id) => api.get(`/courses/${id}`),
   getCategories: () => api.get('/courses/categories'),
   getFeatured: () => api.get('/courses/featured'),
@@ -80,6 +81,15 @@ export const adminAPI = {
   getEnrollments: (params) => api.get('/admin/enrollments', { params }),
   createEnrollment: (data) => api.post('/admin/enrollments', data),
   deleteEnrollment: (id) => api.delete(`/admin/enrollments/${id}`),
+  getAssignments: (params) => api.get('/admin/assignments', { params }),
+  createAssignment: (data) => api.post('/admin/assignments', data),
+  updateAssignment: (id, data) => api.put(`/admin/assignments/${id}`, data),
+  deleteAssignment: (id) => api.delete(`/admin/assignments/${id}`),
+  getSubmissions: (id) => api.get(`/admin/assignments/${id}/submissions`),
+  gradeSubmission: (id, data) => api.post(`/admin/submissions/${id}/grade`, data),
+  getCertificates: (params) => api.get('/admin/certificates', { params }),
+  issueCertificate: (data) => api.post('/admin/certificates', data),
+  revokeCertificate: (id) => api.delete(`/admin/certificates/${id}`),
 };
 
 export default api;

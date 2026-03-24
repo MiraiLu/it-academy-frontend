@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/Layout';
-import { coursesAPI } from '../services/api';
+import { adminAPI, coursesAPI } from '../services/api';
 import YouTubeUploader from '../components/YouTubeUploader';
 import api from '../services/api';
 
@@ -203,7 +203,17 @@ const S = {
 // ─────────────────────────────────────────────────────────────
 // Компонент LessonCard
 // ─────────────────────────────────────────────────────────────
-const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHomework }) => {
+const LessonCard = React.memo(({
+  lesson,
+  onEdit,
+  onDelete,
+  onAddVideo,
+  onAddHomework,
+  canEdit = true,
+  canDelete = true,
+  canAddVideo = true,
+  canAddHomework = true,
+}) => {
   const [expanded, setExpanded] = useState(false);
   const st = LESSON_STATUS[lesson.status] || LESSON_STATUS.draft;
 
@@ -322,25 +332,29 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
 
           {/* Кнопки дій */}
           <div style={S.btnGroup}>
-            <button style={S.btn('secondary')} onClick={(e) => { e.stopPropagation(); onEdit(lesson); }}>
-              ✏️ Редагувати
-            </button>
+            {canEdit && (
+              <button style={S.btn('secondary')} onClick={(e) => { e.stopPropagation(); onEdit(lesson); }}>
+                ✏️ Редагувати
+              </button>
+            )}
 
-            {lesson.type === TYPE_LIVE && !lesson.recording_url && lesson.status === 'completed' && (
+            {canAddVideo && lesson.type === TYPE_LIVE && !lesson.recording_url && lesson.status === 'completed' && (
               <button style={S.btn('youtube')} onClick={(e) => { e.stopPropagation(); onAddVideo(lesson); }}>
                 ▶ Додати YouTube запис
               </button>
             )}
 
-            {!lesson.homework && (
+            {canAddHomework && !lesson.homework && (
               <button style={S.btn('success')} onClick={(e) => { e.stopPropagation(); onAddHomework(lesson); }}>
                 📋 Додати ДЗ
               </button>
             )}
 
-            <button style={S.btn('danger')} onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }}>
-              🗑 Видалити
-            </button>
+            {canDelete && (
+              <button style={S.btn('danger')} onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }}>
+                🗑 Видалити
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -354,6 +368,7 @@ const LessonCard = React.memo(({ lesson, onEdit, onDelete, onAddVideo, onAddHome
 const EMPTY_FORM = {
   type: TYPE_LIVE,
   course_id: '',
+  instructor_id: '',
   title: '',
   description: '',
   order_number: '',
@@ -376,13 +391,25 @@ const EMPTY_FORM = {
 // ГОЛОВНИЙ КОМПОНЕНТ
 // ─────────────────────────────────────────────────────────────
 function Lessons() {
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  })();
+  const isAdmin = currentUser?.role === 'admin';
+  const isLiveOnlyInstructor = !!currentUser?.is_live_only_instructor;
+  const canCreateLessons = !isLiveOnlyInstructor;
+  const canDeleteLessons = !isLiveOnlyInstructor;
   const [lessons, setLessons]       = useState([]);
   const [courses, setCourses]       = useState([]);
+  const [instructors, setInstructors] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [courseFilter, setCourse]   = useState('');
-  const [activeTab, setActiveTab]   = useState('all'); // all | live | online
+  const [activeTab, setActiveTab]   = useState(isLiveOnlyInstructor ? 'live' : 'all'); // all | live | online
 
   const [showModal, setShowModal]   = useState(false);
   const [editing, setEditing]       = useState(null);
@@ -402,6 +429,9 @@ function Lessons() {
   useEffect(() => {
     fetchLessons();
     fetchCourses();
+    if (isAdmin) {
+      fetchInstructors();
+    }
   }, []);
 
   const fetchLessons = async () => {
@@ -415,9 +445,19 @@ function Lessons() {
 
   const fetchCourses = async () => {
     try {
-      const res = await coursesAPI.getAll({ per_page: 200 });
+      const res = await coursesAPI.getManageAll({ per_page: 200 });
       setCourses(res.data?.data?.data || res.data?.data || []);
     } catch { /* тихо */ }
+  };
+
+  const fetchInstructors = async () => {
+    try {
+      const res = await adminAPI.getUsers({ role: 'instructor', per_page: 200 });
+      const list = res.data?.data?.data || res.data?.data || [];
+      setInstructors(list.filter(instructor => instructor?.instructor?.id));
+    } catch {
+      setInstructors([]);
+    }
   };
 
   const setField = useCallback((key, val) => {
@@ -426,7 +466,10 @@ function Lessons() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      type: isLiveOnlyInstructor ? TYPE_LIVE : EMPTY_FORM.type,
+    });
     setFormError('');
     setShowModal(true);
   };
@@ -436,6 +479,7 @@ function Lessons() {
     setForm({
       type:              lesson.type || TYPE_LIVE,
       course_id:         lesson.course_id || '',
+      instructor_id:     lesson.instructor_id || lesson.instructor?.id || '',
       title:             lesson.title || '',
       description:       lesson.description || '',
       order_number:      lesson.order_number || '',
@@ -462,10 +506,16 @@ function Lessons() {
     setSaving(true);
     setFormError('');
     try {
+      const payload = {
+        ...form,
+        type: isLiveOnlyInstructor ? TYPE_LIVE : form.type,
+        instructor_id: form.type === TYPE_LIVE ? (form.instructor_id || null) : null,
+      };
+
       if (editing) {
-        await lessonsAPI.update(editing.id, form);
+        await lessonsAPI.update(editing.id, payload);
       } else {
-        await lessonsAPI.create(form);
+        await lessonsAPI.create(payload);
       }
       setShowModal(false);
       fetchLessons();
@@ -527,6 +577,12 @@ function Lessons() {
     { label: 'Онлайн уроків', value: lessons.filter(l => l.type === TYPE_ONLINE).length, icon: '📹', bg: '#dbeafe' },
     { label: 'Заплановано',   value: lessons.filter(l => l.status === 'scheduled').length, icon: '📅', bg: '#fef9c3' },
   ];
+  const visibleStats = isLiveOnlyInstructor
+    ? stats.filter(item => item.label !== 'Онлайн уроків')
+    : stats;
+  const tabs = isLiveOnlyInstructor
+    ? [['live', '🎥 Живі заняття']]
+    : [['all', 'Всі'], ['live', '🎥 Живі заняття'], ['online', '📹 Онлайн курси']];
 
   // ─────────────────────────────────────────────────────────
   return (
@@ -535,14 +591,16 @@ function Lessons() {
       {/* Заголовок */}
       <div style={S.pageHeader}>
         <h1 style={S.title}>Уроки</h1>
-        <button style={S.btn('primary')} onClick={openCreate}>
-          + Новий урок
-        </button>
+        {canCreateLessons && (
+          <button style={S.btn('primary')} onClick={openCreate}>
+            + Новий урок
+          </button>
+        )}
       </div>
 
       {/* Статистика */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        {stats.map(s => (
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visibleStats.length},1fr)`, gap: 16, marginBottom: 24 }}>
+        {visibleStats.map(s => (
           <div key={s.label} style={S.statCard}>
             <div style={S.statIcon(s.bg)}>{s.icon}</div>
             <div style={S.statVal}>{s.value}</div>
@@ -553,7 +611,7 @@ function Lessons() {
 
       {/* Таби */}
       <div style={S.tabs}>
-        {[['all','Всі'],['live','🎥 Живі заняття'],['online','📹 Онлайн курси']].map(([id,label]) => (
+        {tabs.map(([id,label]) => (
           <button key={id} style={S.tab(activeTab === id)} onClick={() => setActiveTab(id)}>
             {label}
           </button>
@@ -588,6 +646,7 @@ function Lessons() {
             onDelete={handleDelete}
             onAddVideo={l => { setYtModal(l); setYtUrl(l.recording_url || ''); }}
             onAddHomework={l => { setHwModal(l); setHwText(l.homework || ''); setHwDeadline(l.homework_deadline?.slice(0,10) || ''); }}
+            canDelete={canDeleteLessons}
           />
         ))
       )}
@@ -604,19 +663,27 @@ function Lessons() {
 
             {/* Тип уроку */}
             <div style={S.sectionLabel}>ТИП УРОКУ</div>
-            <div style={S.typeSwitch}>
-              {[
-                { id: TYPE_LIVE, icon: '🎥', title: 'Живе заняття', desc: 'Заняття з викладачем у реальному часі' },
-                { id: TYPE_ONLINE, icon: '📹', title: 'Онлайн курс', desc: 'Готові матеріали, студент проходить самостійно' },
-              ].map(t => (
-                <div key={t.id} style={S.typeOption(form.type === t.id, t.id)}
-                  onClick={() => setField('type', t.id)}>
-                  <div style={S.typeOptionIcon}>{t.icon}</div>
-                  <div style={S.typeOptionTitle(form.type === t.id, t.id)}>{t.title}</div>
-                  <div style={S.typeOptionDesc}>{t.desc}</div>
-                </div>
-              ))}
-            </div>
+            {!isLiveOnlyInstructor ? (
+              <div style={S.typeSwitch}>
+                {[
+                  { id: TYPE_LIVE, icon: '🎥', title: 'Живе заняття', desc: 'Заняття з викладачем у реальному часі' },
+                  { id: TYPE_ONLINE, icon: '📹', title: 'Онлайн курс', desc: 'Готові матеріали, студент проходить самостійно' },
+                ].map(t => (
+                  <div key={t.id} style={S.typeOption(form.type === t.id, t.id)}
+                    onClick={() => setField('type', t.id)}>
+                    <div style={S.typeOptionIcon}>{t.icon}</div>
+                    <div style={S.typeOptionTitle(form.type === t.id, t.id)}>{t.title}</div>
+                    <div style={S.typeOptionDesc}>{t.desc}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={S.typeOption(true, TYPE_LIVE)}>
+                <div style={S.typeOptionIcon}>🎥</div>
+                <div style={S.typeOptionTitle(true, TYPE_LIVE)}>Живе заняття</div>
+                <div style={S.typeOptionDesc}>Live-викладач працює лише зі своїми живими заняттями</div>
+              </div>
+            )}
 
             <div style={S.divider} />
 
@@ -625,12 +692,31 @@ function Lessons() {
 
             <label style={S.label}>Курс *</label>
             <select style={S.formSelect} value={form.course_id}
-              onChange={e => setField('course_id', e.target.value)}>
+              onChange={e => setField('course_id', e.target.value)}
+              disabled={isLiveOnlyInstructor}>
               <option value="">— оберіть курс —</option>
               {courses.map(c => (
                 <option key={c.id} value={c.id}>{c.title_uk || c.title}</option>
               ))}
             </select>
+
+            {isAdmin && form.type === TYPE_LIVE && (
+              <>
+                <label style={S.label}>Викладач live-заняття</label>
+                <select
+                  style={S.formSelect}
+                  value={form.instructor_id}
+                  onChange={e => setField('instructor_id', e.target.value)}
+                >
+                  <option value="">— призначити викладача пізніше —</option>
+                  {instructors.map(instructor => (
+                    <option key={instructor.id} value={instructor.instructor?.id || ''}>
+                      {instructor.full_name || `${instructor.first_name} ${instructor.last_name}`} ({instructor.email})
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
 
             <label style={S.label}>Назва уроку *</label>
             <input style={S.formInput} placeholder="Наприклад: Вступ до Python"
@@ -685,7 +771,7 @@ function Lessons() {
             )}
 
             {/* ONLINE-специфіка */}
-            {form.type === TYPE_ONLINE && (
+            {!isLiveOnlyInstructor && form.type === TYPE_ONLINE && (
               <>
                 <div style={S.sectionLabel}>📹 ОНЛАЙН КОНТЕНТ</div>
 

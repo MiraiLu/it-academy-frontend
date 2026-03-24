@@ -113,10 +113,20 @@ const S = {
 // ─────────────────────────────────────────────────────────────
 const QuizCard = React.memo(({ quiz, onEdit, onDelete, onEditQuestions }) => {
   const [expanded, setExpanded] = useState(false);
+  const toggleExpanded = () => setExpanded(prev => !prev);
   return (
     <div style={S.card}
+      onClick={toggleExpanded}
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleExpanded();
+        }
+      }}
     >
       <div style={S.quizHeader}>
         <div style={{ flex: 1 }}>
@@ -137,8 +147,10 @@ const QuizCard = React.memo(({ quiz, onEdit, onDelete, onEditQuestions }) => {
             {quiz.questions_count !== undefined && <span style={S.infoPill}>❓ {quiz.questions_count} питань</span>}
           </div>
         </div>
-        <button onClick={() => setExpanded(!expanded)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8', padding: 4 }}>
+        <button
+          type="button"
+          aria-label={expanded ? 'Згорнути тест' : 'Розгорнути тест'}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8', padding: 4, pointerEvents: 'none' }}>
           {expanded ? '▲' : '▼'}
         </button>
       </div>
@@ -148,7 +160,7 @@ const QuizCard = React.memo(({ quiz, onEdit, onDelete, onEditQuestions }) => {
           {quiz.description && (
             <p style={{ fontSize: 14, color: '#4a4a6a', lineHeight: 1.6, marginBottom: 14 }}>{quiz.description}</p>
           )}
-          <div style={S.btnGroup}>
+          <div style={S.btnGroup} onClick={(e) => e.stopPropagation()}>
             <button style={S.btn('secondary')} onClick={() => onEdit(quiz)}>✏️ Редагувати</button>
             <button style={S.btn('primary')} onClick={() => onEditQuestions(quiz)}>❓ Питання</button>
             <button style={S.btn('danger')} onClick={() => onDelete(quiz.id)}>🗑 Видалити</button>

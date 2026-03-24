@@ -201,7 +201,8 @@ function Enrollments() {
         coursesAPI.getAll({ per_page: 200 }),
       ]);
       if (uRes.status === 'fulfilled') {
-        setUsers(uRes.value.data?.data?.data || uRes.value.data?.data || []);
+        const allUsers = uRes.value.data?.data?.data || uRes.value.data?.data || [];
+        setUsers(allUsers.filter(user => user.role === 'student'));
       }
       if (cRes.status === 'fulfilled') {
         setCourses(cRes.value.data?.data?.data || cRes.value.data?.data || []);
