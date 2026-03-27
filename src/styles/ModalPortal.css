@@ -1,0 +1,56 @@
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(10, 10, 30, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.app-modal-card {
+  width: min(100%, 560px);
+  max-height: calc(100vh - 48px);
+  margin: auto 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app-modal-card--wide {
+  width: min(100%, 920px);
+}
+
+.app-modal-card--medium {
+  width: min(100%, 720px);
+}
+
+.app-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-form-grid--stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .app-modal-overlay {
+    padding: 16px;
+  }
+
+  .app-modal-card {
+    max-height: calc(100vh - 32px);
+  }
+
+  .app-form-grid,
+  .app-form-grid--stats {
+    grid-template-columns: 1fr;
+  }
+}

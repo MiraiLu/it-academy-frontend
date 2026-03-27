@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { coursesAPI } from '../services/api';
 import Layout from '../components/Layout';
+import ModalPortal from '../components/ModalPortal';
 
 // ─────────────────────────────────────────────────────────────
 // СТИЛІ
@@ -191,8 +192,6 @@ const S = {
     marginBottom: '10px',
   },
   twoCol: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
     gap: '12px',
   },
   btnCancel: {
@@ -432,13 +431,14 @@ function Courses() {
 
       {/* Модальне вікно */}
       {canManageCourses && showModal && (
-        <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div style={S.modal}>
+        <ModalPortal>
+        <div className="app-modal-overlay" style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="app-modal-card app-modal-card--medium" style={S.modal}>
             <h2 style={S.modalTitle}>
               {editingCourse ? '✏️ Редагувати курс' : '✨ Новий курс'}
             </h2>
             <form onSubmit={handleSubmit}>
-              <div style={S.twoCol}>
+              <div className="app-form-grid" style={S.twoCol}>
                 <Field label="Назва (UA)" required value={form.title_uk}
                   onChange={e => setField('title_uk', e.target.value)}
                   placeholder="Назва українською" error={errors.title_uk} />
@@ -453,7 +453,7 @@ function Courses() {
                 onChange={e => setField('description', e.target.value)}
                 placeholder="Short description in English..." error={errors.description} />
 
-              <div style={S.twoCol}>
+              <div className="app-form-grid" style={S.twoCol}>
                 <div>
                   <label style={S.label}>Категорія</label>
                   <select value={form.category_id}
@@ -477,7 +477,7 @@ function Courses() {
                 </div>
               </div>
 
-              <div style={S.twoCol}>
+              <div className="app-form-grid" style={S.twoCol}>
                 <div>
                   <label style={S.label}>Рівень</label>
                   <select value={form.level}
@@ -511,6 +511,7 @@ function Courses() {
             </form>
           </div>
         </div>
+        </ModalPortal>
       )}
 
     </Layout>

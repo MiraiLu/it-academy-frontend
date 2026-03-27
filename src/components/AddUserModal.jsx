@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
 import { adminAPI } from '../services/api';
+import ModalPortal from './ModalPortal';
 
 const S = {
   overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(10,10,30,0.45)',
-    backdropFilter: 'blur(4px)',
-    WebkitBackdropFilter: 'blur(4px)',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    zIndex: 1000,
-    padding: 20,
   },
   modal: {
     background: '#fff',
@@ -21,8 +15,6 @@ const S = {
     width: '100%',
     maxWidth: 500,
     boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-    maxHeight: '90vh',
-    overflowY: 'auto',
   },
   title: {
     fontSize: 20,
@@ -75,9 +67,6 @@ const S = {
     cursor: 'pointer',
   },
   twoCol: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 14,
     marginBottom: 14,
   },
   field: {
@@ -129,35 +118,39 @@ const EMPTY = {
   access_scope: 'full',
 };
 
-// ─────────────────────────────────────────────────────────────
-// Props:
-//   onClose()          — закрити без збереження
-//   onSaved()          — викликається після успішного збереження
-//   editUser (опц.)    — якщо передано — режим редагування
-// ─────────────────────────────────────────────────────────────
 function AddUserModal({ onClose, onSaved, editUser = null }) {
   const [form, setForm] = useState(
     editUser
-      ? { first_name: editUser.first_name, last_name: editUser.last_name,
-          email: editUser.email, password: '', role: editUser.role, status: editUser.status, access_scope: editUser.instructor?.access_scope || 'full' }
+      ? {
+          first_name: editUser.first_name,
+          last_name: editUser.last_name,
+          email: editUser.email,
+          password: '',
+          role: editUser.role,
+          status: editUser.status,
+          access_scope: editUser.instructor?.access_scope || 'full',
+        }
       : EMPTY
   );
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
     if (!form.first_name || !form.last_name || !form.email) {
       setError("Ім'я, прізвище та email обов'язкові");
       return;
     }
+
     if (!editUser && !form.password) {
-      setError('Пароль обов\'язковий для нового користувача');
+      setError("Пароль обов'язковий для нового користувача");
       return;
     }
+
     setSaving(true);
     setError('');
+
     try {
       if (editUser) {
         const data = { ...form };
@@ -166,6 +159,7 @@ function AddUserModal({ onClose, onSaved, editUser = null }) {
       } else {
         await adminAPI.createUser(form);
       }
+
       onSaved();
     } catch (err) {
       setError(err.response?.data?.message || 'Помилка збереження');
@@ -175,86 +169,123 @@ function AddUserModal({ onClose, onSaved, editUser = null }) {
   };
 
   return (
-    <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={S.modal}>
-
-        <div style={S.title}>
-          <div style={S.titleIcon}>➕</div>
-          {editUser ? 'Редагувати користувача' : 'Новий користувач'}
-        </div>
-
-        {error && <div style={S.error}>{error}</div>}
-
-        {/* Ім'я + Прізвище */}
-        <div style={S.twoCol}>
-          <div>
-            <label style={S.label}>Ім'я *</label>
-            <input value={form.first_name} onChange={e => set('first_name', e.target.value)}
-              style={S.input} placeholder="Ім'я" />
+    <ModalPortal>
+      <div
+        className="app-modal-overlay"
+        style={S.overlay}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="app-modal-card" style={S.modal}>
+          <div style={S.title}>
+            <div style={S.titleIcon}>➕</div>
+            {editUser ? 'Редагувати користувача' : 'Новий користувач'}
           </div>
-          <div>
-            <label style={S.label}>Прізвище *</label>
-            <input value={form.last_name} onChange={e => set('last_name', e.target.value)}
-              style={S.input} placeholder="Прізвище" />
+
+          {error && <div style={S.error}>{error}</div>}
+
+          <div className="app-form-grid" style={S.twoCol}>
+            <div>
+              <label style={S.label}>Ім'я *</label>
+              <input
+                value={form.first_name}
+                onChange={(e) => setField('first_name', e.target.value)}
+                style={S.input}
+                placeholder="Ім'я"
+              />
+            </div>
+            <div>
+              <label style={S.label}>Прізвище *</label>
+              <input
+                value={form.last_name}
+                onChange={(e) => setField('last_name', e.target.value)}
+                style={S.input}
+                placeholder="Прізвище"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Email */}
-        <div style={S.field}>
-          <label style={S.label}>Email *</label>
-          <input value={form.email} onChange={e => set('email', e.target.value)}
-            style={S.input} placeholder="email@example.com" type="email" />
-        </div>
-
-        {/* Пароль */}
-        <div style={S.field}>
-          <label style={S.label}>
-            Пароль {editUser ? '(залиш порожнім щоб не змінювати)' : '*'}
-          </label>
-          <input value={form.password} onChange={e => set('password', e.target.value)}
-            style={S.input} placeholder="••••••••" type="password" />
-        </div>
-
-        {/* Роль + Статус */}
-        <div style={S.twoCol}>
-          <div>
-            <label style={S.label}>Роль</label>
-            <select value={form.role} onChange={e => set('role', e.target.value)} style={S.select}>
-              <option value="student">Студент</option>
-              <option value="instructor">Викладач</option>
-              <option value="admin">Адмін</option>
-            </select>
-          </div>
-          <div>
-            <label style={S.label}>Статус</label>
-            <select value={form.status} onChange={e => set('status', e.target.value)} style={S.select}>
-              <option value="active">Активний</option>
-              <option value="inactive">Неактивний</option>
-              <option value="blocked">Заблокований</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Кнопки */}
-        {form.role === 'instructor' && (
           <div style={S.field}>
-            <label style={S.label}>Р РµР¶РёРј РґРѕСЃС‚СѓРїСѓ РІРёРєР»Р°РґР°С‡Р°</label>
-            <select value={form.access_scope} onChange={e => set('access_scope', e.target.value)} style={S.select}>
-              <option value="full">РџРѕРІРЅРёР№ РґРѕСЃС‚СѓРї РґРѕ РєСѓСЂСЃС–РІ</option>
-              <option value="live_only">Р›РёС€Рµ live-Р·Р°РЅСЏС‚С‚СЏ</option>
-            </select>
+            <label style={S.label}>Email *</label>
+            <input
+              value={form.email}
+              onChange={(e) => setField('email', e.target.value)}
+              style={S.input}
+              placeholder="email@example.com"
+              type="email"
+            />
           </div>
-        )}
 
-        <div style={S.footer}>
-          <button style={S.btnCancel} onClick={onClose}>Скасувати</button>
-          <button style={S.btnSave} onClick={handleSave} disabled={saving}>
-            {saving ? 'Збереження...' : editUser ? 'Зберегти зміни' : 'Створити'}
-          </button>
+          <div style={S.field}>
+            <label style={S.label}>
+              Пароль {editUser ? '(залиш порожнім щоб не змінювати)' : '*'}
+            </label>
+            <input
+              value={form.password}
+              onChange={(e) => setField('password', e.target.value)}
+              style={S.input}
+              placeholder="••••••••"
+              type="password"
+            />
+          </div>
+
+          <div className="app-form-grid" style={S.twoCol}>
+            <div>
+              <label style={S.label}>Роль</label>
+              <select
+                value={form.role}
+                onChange={(e) => setField('role', e.target.value)}
+                style={S.select}
+              >
+                <option value="student">Студент</option>
+                <option value="instructor">Викладач</option>
+                <option value="admin">Адмін</option>
+              </select>
+            </div>
+            <div>
+              <label style={S.label}>Статус</label>
+              <select
+                value={form.status}
+                onChange={(e) => setField('status', e.target.value)}
+                style={S.select}
+              >
+                <option value="active">Активний</option>
+                <option value="inactive">Неактивний</option>
+                <option value="blocked">Заблокований</option>
+              </select>
+            </div>
+          </div>
+
+          {form.role === 'instructor' && (
+            <div style={S.field}>
+              <label style={S.label}>Режим доступу викладача</label>
+              <select
+                value={form.access_scope}
+                onChange={(e) => setField('access_scope', e.target.value)}
+                style={S.select}
+              >
+                <option value="full">Повний доступ до курсів</option>
+                <option value="live_only">Лише live-заняття</option>
+              </select>
+            </div>
+          )}
+
+          <div style={S.footer}>
+            <button style={S.btnCancel} onClick={onClose}>
+              Скасувати
+            </button>
+            <button style={S.btnSave} onClick={handleSave} disabled={saving}>
+              {saving
+                ? 'Збереження...'
+                : editUser
+                  ? 'Зберегти зміни'
+                  : 'Створити'}
+            </button>
+          </div>
         </div>
-
       </div>
-    </div>
+    </ModalPortal>
   );
 }
 

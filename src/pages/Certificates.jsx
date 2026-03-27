@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/Layout';
+import ModalPortal from '../components/ModalPortal';
 import api from '../services/api';
 
 const certificatesAPI = {
@@ -1014,6 +1015,7 @@ function Certificates() {
       </div>
 
       {showIssueModal && (
+        <ModalPortal>
         <div style={S.overlay} onClick={(event) => { if (event.target === event.currentTarget) setShowIssueModal(false); }}>
           <div style={S.smallModal}>
             <div style={S.modalHead}>
@@ -1122,9 +1124,11 @@ function Certificates() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {showTemplateModal && (
+        <ModalPortal>
         <div style={S.overlay} onClick={(event) => { if (event.target === event.currentTarget) setShowTemplateModal(false); }}>
           <div style={S.modal}>
             <div style={S.modalHead}>
@@ -1406,6 +1410,7 @@ function Certificates() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {previewCertificate && (

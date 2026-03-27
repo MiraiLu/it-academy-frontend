@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../services/api';
 import Layout from '../components/Layout';
 import AddUserModal from '../components/AddUserModal';
+import ModalPortal from '../components/ModalPortal';
 
 // ─── Стилі ──────────────────────────────────────────────────
 const S = {
@@ -485,9 +486,9 @@ function Users() {
 
       {/* ── Modal: Деталі користувача ──────────────────────── */}
       {viewUser && (
-        <>
-          <div style={S.overlay} onClick={() => setViewUser(null)} />
-          <div style={{ ...S.modal, width: 520 }}>
+        <ModalPortal>
+          <div className="app-modal-overlay" style={S.overlay} onClick={(e) => { if (e.target === e.currentTarget) setViewUser(null); }}>
+          <div className="app-modal-card app-modal-card--medium" style={{ ...S.modal, width: 520 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ ...S.avatar, width: 60, height: 60, fontSize: 22 }}>
@@ -512,7 +513,7 @@ function Users() {
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9ca3af' }}>✕</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+            <div className="app-form-grid" style={{ gap: 10, marginBottom: 18 }}>
               {[
                 { icon: '📅', label: 'Дата реєстрації', value: viewUser.registration_date ? new Date(viewUser.registration_date).toLocaleDateString('uk-UA') : new Date(viewUser.created_at).toLocaleDateString('uk-UA') },
                 { icon: '🔐', label: 'Останній вхід', value: viewUser.last_login ? new Date(viewUser.last_login).toLocaleDateString('uk-UA') : 'Ще не входив' },
@@ -528,7 +529,7 @@ function Users() {
               ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 22 }}>
+            <div className="app-form-grid--stats" style={{ marginBottom: 22 }}>
               {[
                 { label: 'Курсів',     value: viewUser.statistics?.enrolled_courses  ?? '—', color: '#6366f1' },
                 { label: 'Завершено',  value: viewUser.statistics?.completed_courses ?? '—', color: '#10b981' },
@@ -548,7 +549,8 @@ function Users() {
               </button>
             </div>
           </div>
-        </>
+          </div>
+        </ModalPortal>
       )}
 
     </Layout>

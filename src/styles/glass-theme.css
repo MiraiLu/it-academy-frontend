@@ -1,0 +1,102 @@
+:root {
+  --bg-1: #edf4f1;
+  --bg-2: #f7efe8;
+  --text-1: #1f2937;
+  --text-2: #667085;
+  --line: rgba(255, 255, 255, 0.5);
+  --panel: rgba(255, 255, 255, 0.34);
+  --panel-strong: rgba(255, 255, 255, 0.58);
+  --shadow-soft: 0 18px 45px rgba(122, 135, 160, 0.18);
+  --shadow-card: 0 10px 30px rgba(132, 144, 168, 0.16);
+  --blur: blur(22px);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 18px;
+  --accent-1: #7c6cff;
+  --accent-2: #7ee7f2;
+  --accent-3: #ffb7d5;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text-1);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 196, 214, 0.55), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(152, 244, 255, 0.45), transparent 30%),
+    radial-gradient(circle at 70% 85%, rgba(179, 164, 255, 0.35), transparent 24%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+}
+
+.glass-page {
+  position: relative;
+  min-height: 100%;
+}
+
+.glass-panel,
+.glass-card,
+.glass-pill {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-soft);
+}
+
+.glass-panel {
+  border-radius: var(--radius-xl);
+  padding: 28px;
+}
+
+.glass-card {
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-card);
+}
+
+.glass-pill {
+  border-radius: 999px;
+  padding: 12px 18px;
+}
+
+.glass-card::before,
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.38), rgba(255,255,255,0.08));
+}
+
+.glass-button {
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(124,108,255,0.92), rgba(126,231,242,0.8));
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(124,108,255,0.25);
+  cursor: pointer;
+}
+
+.glass-button--secondary {
+  background: rgba(255,255,255,0.45);
+  color: var(--text-1);
+  box-shadow: var(--shadow-card);
+}
+
+.glass-input {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.7);
+  color: var(--text-1);
+  outline: none;
+}
+
+.glass-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}

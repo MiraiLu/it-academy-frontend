@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { adminAPI, coursesAPI } from '../services/api';
 import YouTubeUploader from '../components/YouTubeUploader';
 import api from '../services/api';
+import ModalPortal from '../components/ModalPortal';
 
 // ─────────────────────────────────────────────────────────────
 // API helpers (додай в api.js → lessonsAPI)
@@ -140,8 +141,7 @@ const S = {
     padding: 32,
     width: '100%', 
     maxWidth: 580, 
-    //maxHeight: '90vh',
-    overflowY: 'visible', 
+    overflowY: 'auto', 
     boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
   },
   modalTitle: { fontSize: 20, fontWeight: 700, color: '#1a1a2e', marginBottom: 22 },
@@ -171,7 +171,7 @@ const S = {
     outline: 'none', boxSizing: 'border-box', marginBottom: 14,
     cursor: 'pointer', fontFamily: 'inherit',
   },
-  twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
+  twoCol: { gap: 14 },
   errorBox: { background: '#fee2e2', color: '#dc2626', padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13 },
   modalFooter: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 },
   btnCancel: { background: '#f4f5f7', border: 'none', borderRadius: 10, padding: '11px 22px', cursor: 'pointer', fontSize: 14, color: '#6b6b8a', fontWeight: 500 },
@@ -653,8 +653,9 @@ function Lessons() {
 
       {/* ══ МОДАЛКА СТВОРЕННЯ/РЕДАГУВАННЯ ══════════════════ */}
       {showModal && (
-        <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div style={S.modal}>
+        <ModalPortal>
+        <div className="app-modal-overlay" style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="app-modal-card app-modal-card--medium" style={S.modal}>
             <div style={S.modalTitle}>
               {editing ? '✏️ Редагувати урок' : '+ Новий урок'}
             </div>
@@ -726,7 +727,7 @@ function Lessons() {
             <textarea style={S.formTextarea} placeholder="Що студент дізнається на цьому уроці..."
               value={form.description} onChange={e => setField('description', e.target.value)} />
 
-            <div style={S.twoCol}>
+            <div className="app-form-grid" style={S.twoCol}>
               <div>
                 <label style={S.label}>Порядковий номер</label>
                 <input style={S.formInput} type="number" placeholder="1"
@@ -815,12 +816,14 @@ function Lessons() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {/* ══ МОДАЛКА YouTube ══════════════════════════════════ */}
       {ytModal && (
-        <div style={S.overlay}>
-          <div style={{ ...S.modal, maxWidth: 520 }}>
+        <ModalPortal>
+        <div className="app-modal-overlay" style={S.overlay}>
+          <div className="app-modal-card" style={{ ...S.modal, maxWidth: 520 }}>
             <YouTubeUploader
               lessonId={ytModal.id}
               lessonTitle={ytModal.title}
@@ -834,12 +837,14 @@ function Lessons() {
             </button>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {/* ══ МОДАЛКА Домашнє завдання ═════════════════════════ */}
       {hwModal && (
-        <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setHwModal(null); }}>
-          <div style={{ ...S.modal, maxWidth: 460 }}>
+        <ModalPortal>
+        <div className="app-modal-overlay" style={S.overlay} onClick={e => { if (e.target === e.currentTarget) setHwModal(null); }}>
+          <div className="app-modal-card" style={{ ...S.modal, maxWidth: 460 }}>
             <div style={S.modalTitle}>📋 Домашнє завдання</div>
             <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
               Урок: <strong>{hwModal.title}</strong>
@@ -865,6 +870,7 @@ function Lessons() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
     </Layout>
